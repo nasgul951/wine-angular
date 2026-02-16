@@ -75,6 +75,30 @@ The app expects the backend API running at `http://localhost:5197` (configured i
 
 All feature routes are lazy-loaded via `loadComponent`.
 
+## Testing
+
+Unit tests use Karma + Jasmine and run in a headless Chromium browser. If Chrome is not installed, set `CHROME_BIN` to an available Chromium-based browser (e.g. Edge):
+
+```bash
+# With Chrome installed
+ng test --watch=false
+
+# With Edge instead of Chrome
+CHROME_BIN=/usr/bin/microsoft-edge-stable ng test --watch=false --browsers=ChromeHeadless
+```
+
+Test coverage focuses on testable logic rather than template rendering:
+
+| Suite | File | What's tested |
+|-------|------|---------------|
+| WineStore | `core/models/store.model.spec.ts` | `packBinId`/`unpackBinId` encoding round-trips |
+| getPasswordErrors | `shared/components/password-input/password-input.spec.ts` | Password complexity validation and matching |
+| AuthStore | `core/auth/auth.store.spec.ts` | Signal-based state, localStorage persistence, computed properties |
+| AuthService | `core/auth/auth.service.spec.ts` | Login/logout, getUserInfo, HTTP calls via `HttpTestingController` |
+| authInterceptor | `core/auth/auth.interceptor.spec.ts` | Bearer token attachment, login endpoint exemption |
+| authGuard | `core/auth/auth.guard.spec.ts` | Authenticated pass-through, redirect to `/login` |
+| adminGuard | `core/auth/admin.guard.spec.ts` | Admin access control |
+
 ## Development
 
 ```bash
