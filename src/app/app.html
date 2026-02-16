@@ -1,0 +1,40 @@
+@if (showShell()) {
+  <mat-sidenav-container class="h-full">
+    <mat-sidenav #sidenav mode="side" opened class="w-60">
+      <mat-toolbar color="primary" class="!text-lg !font-semibold">Wine Cellar</mat-toolbar>
+      <mat-nav-list>
+        @for (item of navItems(); track item.path) {
+          <a mat-list-item [routerLink]="item.path"
+             routerLinkActive="!bg-black/10"
+             [routerLinkActiveOptions]="{ exact: item.exact }">
+            <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+            <span matListItemTitle>{{ item.label }}</span>
+          </a>
+        }
+      </mat-nav-list>
+    </mat-sidenav>
+
+    <mat-sidenav-content>
+      <mat-toolbar>
+        <button mat-icon-button (click)="sidenav.toggle()">
+          <mat-icon>menu</mat-icon>
+        </button>
+        <span class="flex-1"></span>
+        @if (user(); as u) {
+          <span class="text-sm mr-4">{{ u.userName }}</span>
+        }
+        <button mat-icon-button (click)="logout()" matTooltip="Logout">
+          <mat-icon>logout</mat-icon>
+        </button>
+      </mat-toolbar>
+
+      <div class="flex justify-center p-0 md:px-4 md:py-6 w-full">
+        <div class="w-full max-w-4xl">
+          <router-outlet />
+        </div>
+      </div>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+} @else {
+  <router-outlet />
+}
