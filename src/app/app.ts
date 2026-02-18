@@ -1,7 +1,9 @@
-import { Component, inject, computed, OnInit, signal } from '@angular/core';
+import { Component, inject, computed, OnInit, signal, ViewChild } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs';
-import { MatSidenavModule } from '@angular/material/sidenav';
+import { filter, map } from 'rxjs';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
@@ -28,6 +30,16 @@ export class App implements OnInit {
   private readonly authStore = inject(AuthStore);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly breakpointObserver = inject(BreakpointObserver);
+
+  @ViewChild('sidenav') sidenav!: MatSidenav;
+
+  readonly isMobile = toSignal(
+    this.breakpointObserver.observe(Breakpoints.Handset).pipe(map(r => r.matches)),
+    { initialValue: false },
+  );
+  readonly sidenavMode = computed(() => this.isMobile() ? 'over' : 'side');
+  readonly sidenavOpened = computed(() => !this.isMobile());
 
   readonly user = this.authStore.user;
   readonly isAuthenticated = this.authStore.isAuthenticated;
@@ -58,10 +70,15 @@ export class App implements OnInit {
       filter((e): e is NavigationEnd => e instanceof NavigationEnd),
     ).subscribe(e => {
       this.showShell.set(!e.urlAfterRedirects.startsWith('/login'));
+      if (this.isMobile()) this.sidenav?.close();
     });
 
     // Set initial shell state
     this.showShell.set(!this.router.url.startsWith('/login'));
+  }
+
+  closeSidenavIfMobile(): void {
+    if (this.isMobile()) this.sidenav.close();
   }
 
   logout(): void {

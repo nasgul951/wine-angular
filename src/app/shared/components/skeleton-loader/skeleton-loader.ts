@@ -13,5 +13,6 @@ import { Component } from '@angular/core';
   `,
 })
 export class SkeletonLoaderComponent {
-  items = Array.from({ length: 12 });
+  // create an array of numeric indices so `track item` produces unique keys
+  items = Array.from({ length: 12 }, (_, i) => i);
 }

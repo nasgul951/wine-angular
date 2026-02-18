@@ -17,7 +17,7 @@ import { DatePipe } from '@angular/common';
     MatDividerModule, MatProgressBarModule, AlertBoxComponent, DatePipe,
   ],
   template: `
-    <h2 mat-dialog-title class="!bg-blue-700 !text-white !p-4 !-m-6 !mb-4">
+    <h2 mat-dialog-title class="!bg-blue-700 !text-white !p-4 !mb-4">
       <div>{{ data.vineyard }}</div>
       <div class="text-sm">{{ data.label }} - {{ data.varietal }} ({{ data.vintage }})</div>
       <button mat-icon-button (click)="dialogRef.close()"
@@ -82,7 +82,12 @@ export class WineDialogComponent implements OnInit {
 
   consumeBottle(bottleId: number): void {
     this.wineService.patchBottle(bottleId, { consumed: true }).subscribe({
-      next: () => this.bottles.update(list => list.filter(b => b.id !== bottleId)),
+      next: () => {
+        this.bottles.update(list => list.filter(b => b.id !== bottleId))
+        if (this.bottles().length === 0) {
+          this.dialogRef.close({ lastConsumed: true });
+        }
+      },
       error: (err) => this.error.set(`Failed to consume bottle: ${err.message}`),
     });
   }

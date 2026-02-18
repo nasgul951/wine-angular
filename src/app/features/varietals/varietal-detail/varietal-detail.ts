@@ -128,8 +128,11 @@ export class VarietalDetailComponent implements OnInit {
       data: wine,
       width: '500px',
       maxWidth: '95vw',
-    }).afterClosed().subscribe(() => {
+    }).afterClosed().subscribe((result) => {
       this.selectedId.set(null);
+      if (result?.lastConsumed) {
+        this.fetchWines();
+      }
     });
   }
 }

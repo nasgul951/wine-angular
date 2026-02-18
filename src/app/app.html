@@ -1,12 +1,13 @@
 @if (showShell()) {
   <mat-sidenav-container class="h-full">
-    <mat-sidenav #sidenav mode="side" opened class="w-60">
+    <mat-sidenav #sidenav [mode]="sidenavMode()" [opened]="sidenavOpened()" class="w-60">
       <mat-toolbar color="primary" class="!text-lg !font-semibold">Wine Cellar</mat-toolbar>
       <mat-nav-list>
         @for (item of navItems(); track item.path) {
           <a mat-list-item [routerLink]="item.path"
              routerLinkActive="!bg-black/10"
-             [routerLinkActiveOptions]="{ exact: item.exact }">
+             [routerLinkActiveOptions]="{ exact: item.exact }"
+             (click)="closeSidenavIfMobile()">
             <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
             <span matListItemTitle>{{ item.label }}</span>
           </a>

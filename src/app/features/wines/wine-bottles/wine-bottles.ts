@@ -6,36 +6,39 @@ import { WineService } from '../../../core/services/wine.service';
 import { Bottle } from '../../../core/models/wine.model';
 import { AlertBoxComponent } from '../../../shared/components/alert-box/alert-box';
 import { WineBottleRowComponent } from '../wine-bottle-row/wine-bottle-row';
+import { MatCardContent } from "@angular/material/card";
 
 @Component({
   selector: 'app-wine-bottles',
-  imports: [MatIconModule, MatButtonModule, MatDividerModule, AlertBoxComponent, WineBottleRowComponent],
+  imports: [MatIconModule, MatButtonModule, MatDividerModule, AlertBoxComponent, WineBottleRowComponent, MatCardContent],
   template: `
     <mat-divider class="!my-4" />
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="text-lg font-semibold">Bottles</h3>
-      <button mat-icon-button color="primary" (click)="addNewBottle.set(true)">
-        <mat-icon>add</mat-icon>
-      </button>
-    </div>
+    <mat-card-content>
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold">Bottles</h3>
+        <button mat-icon-button color="primary" (click)="addNewBottle.set(true)">
+          <mat-icon>add</mat-icon>
+        </button>
+      </div>
 
-    <app-alert-box [message]="error()" type="error" (cleared)="error.set(null)" />
+      <app-alert-box [message]="error()" type="error" (cleared)="error.set(null)" />
 
-    @for (bottle of bottles(); track bottle.id) {
-      <app-wine-bottle-row
-        [bottle]="bottle"
-        (updated)="onBottleUpdate($event)"
-        (consumed)="onBottleConsumed($event)"
-        (errorOccurred)="error.set($event)" />
-    }
+      @for (bottle of bottles(); track bottle.id) {
+        <app-wine-bottle-row
+          [bottle]="bottle"
+          (updated)="onBottleUpdate($event)"
+          (consumed)="onBottleConsumed($event)"
+          (errorOccurred)="error.set($event)" />
+      }
 
-    @if (addNewBottle()) {
-      <app-wine-bottle-row
-        [isNew]="true"
-        [wineId]="wineId()"
-        (inserted)="onBottleInsert($event)"
-        (errorOccurred)="error.set($event)" />
-    }
+      @if (addNewBottle()) {
+        <app-wine-bottle-row
+          [isNew]="true"
+          [wineId]="wineId()"
+          (inserted)="onBottleInsert($event)"
+          (errorOccurred)="error.set($event)" />
+      }
+    </mat-card-content>
   `,
 })
 export class WineBottlesComponent implements OnInit {
