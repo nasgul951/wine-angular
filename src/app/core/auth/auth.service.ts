@@ -13,7 +13,10 @@ export class AuthService {
 
   login(req: CredentialsAuthRequest): Observable<boolean> {
     return this.http.post<AuthResponse>(this.baseUrl, req).pipe(
-      tap(res => this.store.setToken(res.token)),
+      tap(res => {
+        this.store.setToken(res.token);
+        this.store.setExpires(res.expires);
+      }),
       map(() => true),
       catchError(() => of(false)),
     );

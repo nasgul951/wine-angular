@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -67,6 +67,7 @@ export class LoginComponent {
   private readonly authService = inject(AuthService);
   private readonly authStore = inject(AuthStore);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   username = '';
   password = '';
@@ -77,6 +78,10 @@ export class LoginComponent {
   constructor() {
     if (this.authStore.isAuthenticated()) {
       this.router.navigate(['/']);
+    }
+
+    if (this.route.snapshot.queryParamMap.get('expired')) {
+      this.error.set('Your session has expired. Please sign in again.');
     }
   }
 

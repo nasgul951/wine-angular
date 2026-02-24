@@ -102,7 +102,7 @@ Test coverage focuses on testable logic rather than template rendering:
 ## Development
 
 ```bash
-ng serve          # Dev server at http://localhost:4200
-ng build          # Production build to dist/
-ng test           # Run unit tests
+npm start          # Dev server at http://localhost:4200
+npm build          # Production build to dist/
+npm test           # Run unit tests
 ```
