@@ -1,4 +1,4 @@
-import { Component, inject, computed, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, inject, computed, OnInit, signal, ViewChild, effect, DestroyRef } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { filter, map } from 'rxjs';
@@ -33,6 +33,33 @@ export class App implements OnInit {
   private readonly breakpointObserver = inject(BreakpointObserver);
 
   @ViewChild('sidenav') sidenav!: MatSidenav;
+
+  private expirationTimer: ReturnType<typeof setTimeout> | null = null;
+
+  constructor() {
+    const destroyRef = inject(DestroyRef);
+
+    effect(() => {
+      this.clearExpirationTimer();
+
+      const expires = this.authStore.expires();
+      if (!expires) return;
+
+      const remaining = expires.getTime() - Date.now();
+      if (remaining <= 0) {
+        this.authService.logout();
+        this.router.navigate(['/login'], { queryParams: { expired: true } });
+        return;
+      }
+
+      this.expirationTimer = setTimeout(() => {
+        this.authService.logout();
+        this.router.navigate(['/login'], { queryParams: { expired: true } });
+      }, remaining);
+    });
+
+    destroyRef.onDestroy(() => this.clearExpirationTimer());
+  }
 
   readonly isMobile = toSignal(
     this.breakpointObserver.observe(Breakpoints.Handset).pipe(map(r => r.matches)),
@@ -84,5 +111,12 @@ export class App implements OnInit {
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  private clearExpirationTimer(): void {
+    if (this.expirationTimer !== null) {
+      clearTimeout(this.expirationTimer);
+      this.expirationTimer = null;
+    }
   }
 }
