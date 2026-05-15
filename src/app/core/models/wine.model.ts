@@ -69,6 +69,7 @@ export interface IStore {
   id: number;
   name: string;
   abbreviation: string;
+  color: string;
   rows: number;
   columns: number;
   hasTopBin: boolean;

@@ -10,14 +10,16 @@ import { WineService } from '../../../core/services/wine.service';
 import { Wine } from '../../../core/models/wine.model';
 import { AlertBoxComponent } from '../../../shared/components/alert-box/alert-box';
 import { WineBottlesComponent } from '../wine-bottles/wine-bottles';
+import { BreadcrumbComponent, BreadcrumbItem } from '../../../shared/components/breadcrumb/breadcrumb';
 
 @Component({
   selector: 'app-wine-detail',
   imports: [
     FormsModule, ReactiveFormsModule, MatCardModule, MatFormFieldModule, MatInputModule,
-    MatIconModule, MatButtonModule, AlertBoxComponent, WineBottlesComponent,
+    MatIconModule, MatButtonModule, AlertBoxComponent, WineBottlesComponent, BreadcrumbComponent,
   ],
   template: `
+    <app-breadcrumb [crumbs]="breadcrumbs()" />
     <app-alert-box [message]="error()" type="error" (cleared)="error.set(null)" />
 
     <mat-card class="max-w-3xl">
@@ -75,7 +77,7 @@ import { WineBottlesComponent } from '../wine-bottles/wine-bottles';
       @if ( formGroup.dirty ) {
         <div class="bg-amber-600 text-white p-3 flex items-center justify-between rounded-b">
           <span>Unsaved Changes</span>
-          <button mat-icon-button (click)="save()" class="!text-white">
+          <button mat-icon-button (click)="save()" class="text-white!">
             <mat-icon>save</mat-icon>
           </button>
         </div>
@@ -102,8 +104,19 @@ export class WineDetailComponent implements OnInit {
   });
 
   error = signal<string | null>(null);
-  loading = signal(true);
   wineId = signal<number | null>(null);
+  wine = signal<Wine | null>(null);
+
+  breadcrumbs = computed<BreadcrumbItem[]>(() => {
+    const w = this.wine();
+    const label = this.wineId()
+      ? (w ? `${w.vineyard} · ${w.label}` : '…')
+      : 'New Wine';
+    return [
+      { label: 'Wines', route: ['/wines'] },
+      { label },
+    ];
+  });
 
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
@@ -112,6 +125,7 @@ export class WineDetailComponent implements OnInit {
       this.wineId.set(id);
       this.wineService.getWineById(id).subscribe({
         next: (wine) => {
+          this.wine.set(wine);
           this.formGroup.patchValue({
             vineyard: wine.vineyard,
             label: wine.label,
@@ -120,15 +134,9 @@ export class WineDetailComponent implements OnInit {
             notes: wine.notes,
           });
           this.formGroup.markAsPristine();
-          this.loading.set(false);
         },
-        error: (err) => {
-          this.error.set(`Failed to fetch wine: ${err.status}`);
-          this.loading.set(false);
-        },
+        error: (err) => this.error.set(`Failed to fetch wine: ${err.status}`),
       });
-    } else {
-      this.loading.set(false);
     }
   }
 
@@ -146,9 +154,7 @@ export class WineDetailComponent implements OnInit {
         vintage: this.formGroup.get('vintage')!.value ?? undefined,
         notes: this.formGroup.get('notes')!.value ?? undefined,
       }).subscribe({
-        next: (wine) => {
-          this.updateFormFromWine(wine);
-        },
+        next: (wine) => this.updateFormFromWine(wine),
         error: (err) => this.error.set(`Failed to save wine: ${err.status}`),
       });
     } else {
@@ -159,15 +165,14 @@ export class WineDetailComponent implements OnInit {
         vintage: this.formGroup.get('vintage')!.value!,
         notes: this.formGroup.get('notes')!.value!,
       }).subscribe({
-        next: (wine) => {
-          this.router.navigate(['/wines', wine.id]);
-        },  
+        next: (wine) => this.router.navigate(['/wines', wine.id]),
         error: (err) => this.error.set(`Failed to save wine: ${err.status}`),
       });
     }
   }
 
   private updateFormFromWine(wine: Wine): void {
+    this.wine.set(wine);
     this.formGroup.patchValue({
       vineyard: wine.vineyard,
       label: wine.label,

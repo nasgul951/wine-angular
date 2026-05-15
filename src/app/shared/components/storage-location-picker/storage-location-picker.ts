@@ -14,6 +14,8 @@ import { IStore } from '../../../core/models/wine.model';
       <button
         mat-flat-button
         class="storage-pill"
+        [style.backgroundColor]="selectedLocation()?.color"
+        [style.color]="'white'"
         [matTooltip]="selectedLocation()?.name ?? ''"
         [matMenuTriggerFor]="locationMenu">
         {{ selectedLocation()?.abbreviation ?? '?' }}

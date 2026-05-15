@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { FormsModule } from '@angular/forms';
 import { WineService } from '../../../core/services/wine.service';
+import { WineListStateService } from '../../../core/services/wine-list-state.service';
 import { Wine, WineFilter, GetWinesOptions } from '../../../core/models/wine.model';
 import { ISortModel } from '../../../core/models/common.model';
 import { AlertBoxComponent } from '../../../shared/components/alert-box/alert-box';
@@ -54,8 +55,8 @@ import { FilterDrawerComponent } from '../filter-drawer/filter-drawer';
             </ng-container>
 
             <ng-container matColumnDef="vintage">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header class="!text-center">Vintage</th>
-              <td mat-cell *matCellDef="let wine" class="!text-center">{{ wine.vintage }}</td>
+              <th mat-header-cell *matHeaderCellDef mat-sort-header class="text-center!">Vintage</th>
+              <td mat-cell *matCellDef="let wine" class="text-center!">{{ wine.vintage }}</td>
             </ng-container>
 
             <ng-container matColumnDef="vineyard">
@@ -74,8 +75,8 @@ import { FilterDrawerComponent } from '../filter-drawer/filter-drawer';
             </ng-container>
 
             <ng-container matColumnDef="count">
-              <th mat-header-cell *matHeaderCellDef class="!text-right">Bottles</th>
-              <td mat-cell *matCellDef="let wine" class="!text-right">{{ wine.count }}</td>
+              <th mat-header-cell *matHeaderCellDef class="text-right!">Bottles</th>
+              <td mat-cell *matCellDef="let wine" class="text-right!">{{ wine.count }}</td>
             </ng-container>
 
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
@@ -105,6 +106,7 @@ import { FilterDrawerComponent } from '../filter-drawer/filter-drawer';
 export class WineListComponent implements OnInit {
   readonly router = inject(Router);
   private readonly wineService = inject(WineService);
+  private readonly wineListState = inject(WineListStateService);
 
   error = signal<string | null>(null);
   loading = signal(true);
@@ -120,10 +122,16 @@ export class WineListComponent implements OnInit {
   showAll = false;
 
   ngOnInit(): void {
+    this.filter.set(this.wineListState.filter);
+    this.page = this.wineListState.page;
+    this.pageSize = this.wineListState.pageSize;
+    this.sortModel = this.wineListState.sortModel;
+    this.showAll = this.wineListState.filter?.showAll ?? false;
     this.fetchWines();
   }
 
   fetchWines(): void {
+    this.saveState();
     const options: GetWinesOptions = {
       page: this.page,
       pageSize: this.pageSize,
@@ -174,5 +182,12 @@ export class WineListComponent implements OnInit {
     this.showAll = false;
     this.page = 0;
     this.fetchWines();
+  }
+
+  private saveState(): void {
+    this.wineListState.filter = this.filter();
+    this.wineListState.page = this.page;
+    this.wineListState.pageSize = this.pageSize;
+    this.wineListState.sortModel = this.sortModel;
   }
 }
