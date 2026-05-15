@@ -6,12 +6,19 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { WineService } from '../../../core/services/wine.service';
 import { Bottle } from '../../../core/models/wine.model';
+import { StorageLocationPickerComponent } from '../../../shared/components/storage-location-picker/storage-location-picker';
 
 @Component({
   selector: 'app-wine-bottle-row',
-  imports: [FormsModule, MatFormFieldModule, MatInputModule, MatIconModule, MatButtonModule],
+  imports: [FormsModule, MatFormFieldModule, MatInputModule, MatIconModule, MatButtonModule, StorageLocationPickerComponent],
   template: `
-    <div class="grid grid-cols-4 gap-2 items-center">
+    <div class="grid grid-cols-5 gap-2 items-start">
+      <div class="flex justify-center">
+        <app-storage-location-picker
+          [storageId]="selectedStorageId()"
+          (storageIdChange)="onStorageChange($event)" />
+      </div>
+
       <mat-form-field>
         <mat-label>Row</mat-label>
         <input matInput type="number" [(ngModel)]="binY" (ngModelChange)="markDirty()" />
@@ -27,7 +34,7 @@ import { Bottle } from '../../../core/models/wine.model';
         <input matInput type="number" [(ngModel)]="depth" (ngModelChange)="markDirty()" />
       </mat-form-field>
 
-      <div class="flex justify-center items-center">
+      <div class="flex justify-center items-center pt-2">
         @if (dirty()) {
           <button mat-icon-button color="primary" (click)="save()">
             <mat-icon>save</mat-icon>
@@ -48,7 +55,8 @@ export class WineBottleRowComponent implements OnInit {
   bottle = input<Bottle | undefined>();
   isNew = input(false);
   wineId = input<number>(0);
-  storageId = input(5);
+
+  selectedStorageId = signal<number>(5);
 
   updated = output<Bottle>();
   inserted = output<Bottle>();
@@ -68,12 +76,18 @@ export class WineBottleRowComponent implements OnInit {
       this.binX = b.binX;
       this.binY = b.binY;
       this.depth = b.depth;
+      this.selectedStorageId.set(b.storageId);
     }
-    this.initialState = JSON.stringify({ binX: this.binX, binY: this.binY, depth: this.depth });
+    this.initialState = JSON.stringify({ binX: this.binX, binY: this.binY, depth: this.depth, storageId: this.selectedStorageId() });
+  }
+
+  onStorageChange(id: number): void {
+    this.selectedStorageId.set(id);
+    this.markDirty();
   }
 
   markDirty(): void {
-    const current = JSON.stringify({ binX: this.binX, binY: this.binY, depth: this.depth });
+    const current = JSON.stringify({ binX: this.binX, binY: this.binY, depth: this.depth, storageId: this.selectedStorageId() });
     this.dirty.set(current !== this.initialState);
   }
 
@@ -83,7 +97,7 @@ export class WineBottleRowComponent implements OnInit {
     if (this.isNew()) {
       this.wineService.addBottle({
         wineId: this.wineId(),
-        storageId: this.storageId(),
+        storageId: this.selectedStorageId(),
         binX: this.binX,
         binY: this.binY,
         depth: this.depth,
@@ -94,13 +108,14 @@ export class WineBottleRowComponent implements OnInit {
     } else {
       const b = this.bottle()!;
       this.wineService.patchBottle(b.id, {
+        storageId: this.selectedStorageId(),
         binX: this.binX,
         binY: this.binY,
         depth: this.depth,
       }).subscribe({
         next: (updated) => {
           this.updated.emit(updated);
-          this.initialState = JSON.stringify({ binX: this.binX, binY: this.binY, depth: this.depth });
+          this.initialState = JSON.stringify({ binX: this.binX, binY: this.binY, depth: this.depth, storageId: this.selectedStorageId() });
           this.dirty.set(false);
         },
         error: (err) => this.errorOccurred.emit(`Failed to update bottle: ${err.message}`),

@@ -65,6 +65,16 @@ export interface IStoreLocation {
   count: number;
 }
 
+export interface IStore {
+  id: number;
+  name: string;
+  abbreviation: string;
+  rows: number;
+  columns: number;
+  hasTopBin: boolean;
+  hasBottomBin: boolean;
+}
+
 export interface IStoreBottle {
   bottleId: number;
   wineId: number;
