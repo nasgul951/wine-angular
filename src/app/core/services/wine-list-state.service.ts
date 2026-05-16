@@ -8,4 +8,5 @@ export class WineListStateService {
   page = 0;
   pageSize = 10;
   sortModel: ISortModel | undefined = undefined;
+  lastUsedStoreId: number | undefined = undefined;
 }

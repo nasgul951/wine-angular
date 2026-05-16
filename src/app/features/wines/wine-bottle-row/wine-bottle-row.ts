@@ -5,6 +5,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { WineService } from '../../../core/services/wine.service';
+import { WineListStateService } from '../../../core/services/wine-list-state.service';
 import { Bottle } from '../../../core/models/wine.model';
 import { StorageLocationPickerComponent } from '../../../shared/components/storage-location-picker/storage-location-picker';
 
@@ -51,12 +52,13 @@ import { StorageLocationPickerComponent } from '../../../shared/components/stora
 })
 export class WineBottleRowComponent implements OnInit {
   private readonly wineService = inject(WineService);
+  private readonly wineListState = inject(WineListStateService);
 
   bottle = input<Bottle | undefined>();
   isNew = input(false);
   wineId = input<number>(0);
 
-  selectedStorageId = signal<number>(5);
+  selectedStorageId = signal<number>(this.wineListState.lastUsedStoreId ?? 5);
 
   updated = output<Bottle>();
   inserted = output<Bottle>();
@@ -102,7 +104,10 @@ export class WineBottleRowComponent implements OnInit {
         binY: this.binY,
         depth: this.depth,
       }).subscribe({
-        next: (b) => this.inserted.emit(b),
+        next: (b) => {
+          this.wineListState.lastUsedStoreId = this.selectedStorageId();
+          this.inserted.emit(b);
+        },
         error: (err) => this.errorOccurred.emit(`Failed to add bottle: ${err.message}`),
       });
     } else {
