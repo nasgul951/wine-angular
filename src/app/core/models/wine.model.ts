@@ -4,6 +4,9 @@ export interface WineFilter {
   id?: number;
   varietal?: string;
   vineyard?: string;
+  labelLike?: string;
+  vintageFrom?: number;
+  vintageTo?: number;
   showAll?: boolean;
 }
 
@@ -69,6 +72,7 @@ export interface IStore {
   id: number;
   name: string;
   abbreviation: string;
+  color: string;
   rows: number;
   columns: number;
   hasTopBin: boolean;

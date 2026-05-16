@@ -5,8 +5,8 @@ import { IStore } from '../models/wine.model';
 @Injectable({ providedIn: 'root' })
 export class StorageLocationService {
   private readonly locations: IStore[] = [
-    { id: 5, name: 'Kitchen Wine Cooler', abbreviation: 'K', rows: 8, columns: 12, hasTopBin: true, hasBottomBin: false },
-    { id: 6, name: 'Den Wine Cooler', abbreviation: 'D', rows: 6, columns: 10, hasTopBin: false, hasBottomBin: false },
+    { id: 5, name: 'Kitchen Wine Cooler', abbreviation: 'K', color: '#b45309', rows: 8, columns: 12, hasTopBin: true, hasBottomBin: false },
+    { id: 6, name: 'Den Wine Cooler', abbreviation: 'D', color: '#1d4ed8', rows: 6, columns: 10, hasTopBin: false, hasBottomBin: false },
   ];
 
   getAll(): Observable<IStore[]> {
