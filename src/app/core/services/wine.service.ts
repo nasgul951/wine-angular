@@ -14,14 +14,25 @@ export class WineService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiBaseUrl}/wine`;
 
-  getVarietals(): Observable<INameCount[]> {
-    return this.http.get<INameCount[]>(`${this.baseUrl}/varietals`);
-  }
-
-  getVineyards(like?: string): Observable<INameCount[]> {
+  getVarietals(like?: string, limit?: number): Observable<INameCount[]> {
     let params = new HttpParams();
     if (like) params = params.set('like', like);
+    if (limit) params = params.set('limit', limit.toString());
+    return this.http.get<INameCount[]>(`${this.baseUrl}/varietals`, { params });
+  }
+
+  getVineyards(like?: string, limit?: number): Observable<INameCount[]> {
+    let params = new HttpParams();
+    if (like) params = params.set('like', like);
+    if (limit) params = params.set('limit', limit.toString());
     return this.http.get<INameCount[]>(`${this.baseUrl}/vineyards`, { params });
+  }
+
+  getLabels(like?: string, limit?: number): Observable<INameCount[]> {
+    let params = new HttpParams();
+    if (like) params = params.set('like', like);
+    if (limit) params = params.set('limit', limit.toString());
+    return this.http.get<INameCount[]>(`${this.baseUrl}/labels`, { params });
   }
 
   getWineById(wineId: number): Observable<Wine> {

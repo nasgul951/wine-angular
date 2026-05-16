@@ -12,7 +12,7 @@ import { MatCardContent } from "@angular/material/card";
   selector: 'app-wine-bottles',
   imports: [MatIconModule, MatButtonModule, MatDividerModule, AlertBoxComponent, WineBottleRowComponent, MatCardContent],
   template: `
-    <mat-divider class="!my-4" />
+    <mat-divider class="my-4!" />
     <mat-card-content>
       <div class="flex justify-between items-center mb-4">
         <h3 class="text-lg font-semibold">Bottles</h3>

@@ -4,6 +4,9 @@ export interface WineFilter {
   id?: number;
   varietal?: string;
   vineyard?: string;
+  labelLike?: string;
+  vintageFrom?: number;
+  vintageTo?: number;
   showAll?: boolean;
 }
 

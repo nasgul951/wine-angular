@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -6,6 +6,7 @@ import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { FormsModule } from '@angular/forms';
 import { WineService } from '../../../core/services/wine.service';
@@ -16,11 +17,16 @@ import { AlertBoxComponent } from '../../../shared/components/alert-box/alert-bo
 import { SkeletonLoaderComponent } from '../../../shared/components/skeleton-loader/skeleton-loader';
 import { FilterDrawerComponent } from '../filter-drawer/filter-drawer';
 
+interface FilterChip {
+  label: string;
+  key: keyof WineFilter;
+}
+
 @Component({
   selector: 'app-wine-list',
   imports: [
     MatTableModule, MatPaginatorModule, MatSortModule, MatCardModule,
-    MatButtonModule, MatIconModule, MatSlideToggleModule, FormsModule,
+    MatButtonModule, MatIconModule, MatChipsModule, MatSlideToggleModule, FormsModule,
     AlertBoxComponent, SkeletonLoaderComponent, FilterDrawerComponent,
   ],
   template: `
@@ -28,6 +34,9 @@ import { FilterDrawerComponent } from '../filter-drawer/filter-drawer';
 
     <mat-card>
       <mat-card-actions align="end">
+        <button mat-stroked-button (click)="drawerOpen.set(true)">
+          <mat-icon>filter_list</mat-icon> Filters
+        </button>
         <button mat-flat-button color="primary" (click)="router.navigate(['/wines/new'])">
           <mat-icon>add</mat-icon> Add Wine
         </button>
@@ -41,9 +50,22 @@ import { FilterDrawerComponent } from '../filter-drawer/filter-drawer';
             <mat-slide-toggle [(ngModel)]="showAll" (change)="onShowAllChange()">
               Show All
             </mat-slide-toggle>
-            <button mat-stroked-button (click)="drawerOpen.set(true)">
-              <mat-icon>filter_list</mat-icon> Filters
-            </button>
+
+            @if (activeFilterChips().length > 0) {
+              <div class="flex items-center gap-2 flex-wrap mb-4">
+                <mat-chip-set>
+                  @for (chip of activeFilterChips(); track chip.key) {
+                    <mat-chip (removed)="clearFilter(chip.key)">
+                      {{ chip.label }}
+                      <button matChipRemove [attr.aria-label]="'Remove ' + chip.label">
+                        <mat-icon>cancel</mat-icon>
+                      </button>
+                    </mat-chip>
+                  }
+                </mat-chip-set>
+                <button mat-button color="warn" (click)="resetFilters()">Clear all</button>
+              </div>
+            }
           </div>
 
           <table mat-table [dataSource]="wines()" matSort (matSortChange)="onSortChange($event)"
@@ -121,6 +143,17 @@ export class WineListComponent implements OnInit {
   sortModel: ISortModel | undefined;
   showAll = false;
 
+  activeFilterChips = computed<FilterChip[]>(() => {
+    const f = this.filter();
+    const chips: FilterChip[] = [];
+    if (f?.vineyard)     chips.push({ label: `Vineyard: ${f.vineyard}`, key: 'vineyard' });
+    if (f?.varietal)     chips.push({ label: `Varietal: ${f.varietal}`, key: 'varietal' });
+    if (f?.labelLike)    chips.push({ label: `Label: ${f.labelLike}`, key: 'labelLike' });
+    if (f?.vintageFrom)  chips.push({ label: `Vintage ≥ ${f.vintageFrom}`, key: 'vintageFrom' });
+    if (f?.vintageTo)    chips.push({ label: `Vintage ≤ ${f.vintageTo}`, key: 'vintageTo' });
+    return chips;
+  });
+
   ngOnInit(): void {
     this.filter.set(this.wineListState.filter);
     this.page = this.wineListState.page;
@@ -173,6 +206,13 @@ export class WineListComponent implements OnInit {
 
   onFilterChange(name: keyof WineFilter, value: WineFilter[keyof WineFilter]): void {
     this.filter.update(f => ({ ...f, [name]: value }));
+    this.page = 0;
+    this.fetchWines();
+  }
+
+  clearFilter(key: keyof WineFilter): void {
+    if (key === 'showAll') this.showAll = false;
+    this.filter.update(f => ({ ...f, [key]: undefined }));
     this.page = 0;
     this.fetchWines();
   }
