@@ -2,9 +2,8 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { WineService } from '../../../core/services/wine.service';
-import { IStoreLocation } from '../../../core/models/wine.model';
-import { WineStore } from '../../../core/models/store.model';
+import { StorageLocationService } from '../../../core/services/storage-location.service';
+import { WineStore, IStoreCell, IStoreInventory } from '../../../core/models/store.model';
 import { AlertBoxComponent } from '../../../shared/components/alert-box/alert-box';
 import { BinListComponent } from '../bin-list/bin-list';
 
@@ -20,8 +19,17 @@ interface BinContent {
   imports: [MatCardModule, MatProgressSpinnerModule, AlertBoxComponent, BinListComponent],
   template: `
     <app-alert-box [message]="error()" type="error" (cleared)="error.set(null)" />
+    <app-alert-box [message]="warning()" type="warning" (cleared)="warning.set(null)" />
 
-    <mat-card class="w-full max-w-xs">
+    <mat-card class="w-full max-w-xs overflow-hidden!">
+      @if (inventory(); as store) {
+        <div
+          class="flex items-center justify-between px-4 py-3"
+          [style.backgroundColor]="store.color">
+          <span class="text-white font-semibold text-base tracking-wide">{{ store.name }}</span>
+          <span class="text-white text-sm font-medium opacity-90">{{ store.totalBottles }} bottles</span>
+        </div>
+      }
       @if (loading()) {
         <div class="flex items-center justify-center h-64">
           <mat-spinner />
@@ -58,12 +66,14 @@ interface BinContent {
   `,
 })
 export class StorageGridComponent implements OnInit {
-  private readonly wineService = inject(WineService);
+  private readonly storageLocationService = inject(StorageLocationService);
   private readonly route = inject(ActivatedRoute);
 
   loading = signal(true);
   error = signal<string | null>(null);
+  warning = signal<string | null>(null);
   bins = signal<BinContent[]>([]);
+  inventory = signal<IStoreInventory | null>(null);
   selectedBin = signal<number | null>(null);
 
   private storeId = 5;
@@ -83,9 +93,17 @@ export class StorageGridComponent implements OnInit {
 
   private fetchInventory(): void {
     this.loading.set(true);
-    this.wineService.getStoreInventory(this.storeId).subscribe({
+    this.storageLocationService.getInventory(this.storeId).subscribe({
       next: (data) => {
-        this.bins.set(this.parseContents(data));
+        this.inventory.set(data);
+        const { bins, outOfRange } = this.parseContentsBetter(data);
+        this.bins.set(bins);
+        if (outOfRange.length > 0) {
+          const coords = outOfRange.map(c => `(${c.binX}, ${c.binY})`).join(', ');
+          this.warning.set(`${outOfRange.length} bottle(s) are outside the grid at: ${coords}`);
+        } else {
+          this.warning.set(null);
+        }
         this.loading.set(false);
       },
       error: (err) => {
@@ -95,12 +113,12 @@ export class StorageGridComponent implements OnInit {
     });
   }
 
-  private parseContents(data: IStoreLocation[]): BinContent[] {
+  private parseContents(data: IStoreCell[]): BinContent[] {
     const store: BinContent[] = [];
     let ix = 0;
     let d = data[ix];
 
-    // Top row (y=0) as single double-wide bin
+    // Top row (y=0) as single double-height bin
     let topCount = 0;
     while (d && d.binY === 0) {
       topCount += d.count;
@@ -135,7 +153,7 @@ export class StorageGridComponent implements OnInit {
       }
     }
 
-    // Bottom row (y=16) as single double-wide bin
+    // Bottom row (y=16) as single double-height bin
     let bottomCount = 0;
     while (d && d.binY === 16) {
       bottomCount += d.count;
@@ -149,5 +167,54 @@ export class StorageGridComponent implements OnInit {
     });
 
     return store;
+  }
+
+  private parseContentsBetter(inventory: IStoreInventory): { bins: BinContent[], outOfRange: IStoreCell[] } {
+    const bins: BinContent[] = [];
+    const data = inventory.cells;
+    let ix = 0;
+    let d = data[ix];
+
+    if (inventory.hasTopBin) {
+      let topCount = 0;
+      while (d && d.binY === 0) {
+        topCount += d.count;
+        d = data[++ix];
+      }
+      bins.push({
+        id: this.wineStore.packBinId(0, 0),
+        count: topCount,
+        isDouble: true,
+        isRow: true,
+      });
+    }
+
+    for (let y = 1; y <= inventory.rows; y++) {
+      for (let x = 1; x <= inventory.columns; x++) {
+        if (d && d.binY === y && d.binX === x) {
+          bins.push({ id: this.wineStore.packBinId(x, y), count: d.count, isRow: false, isDouble: false });
+          d = data[++ix];
+        } else {
+          bins.push({ id: this.wineStore.packBinId(x, y), count: 0, isRow: false, isDouble: false });
+        }
+      }
+    }
+
+    if (inventory.hasBottomBin) {
+      const bottomY = inventory.rows + 1;
+      let bottomCount = 0;
+      while (d && d.binY === bottomY) {
+        bottomCount += d.count;
+        d = data[++ix];
+      }
+      bins.push({
+        id: this.wineStore.packBinId(0, bottomY),
+        count: bottomCount,
+        isDouble: true,
+        isRow: true,
+      });
+    }
+
+    return { bins, outOfRange: data.slice(ix) };
   }
 }

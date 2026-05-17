@@ -10,6 +10,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { AuthStore } from './core/auth/auth.store';
 import { AuthService } from './core/auth/auth.service';
+import { StorageLocationService } from './core/services/storage-location.service';
+import { IStore } from './core/models/wine.model';
 
 @Component({
   selector: 'app-root',
@@ -30,6 +32,7 @@ export class App implements OnInit {
   private readonly authStore = inject(AuthStore);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly storageLocationService = inject(StorageLocationService);
   private readonly breakpointObserver = inject(BreakpointObserver);
 
   @ViewChild('sidenav') sidenav!: MatSidenav;
@@ -68,6 +71,8 @@ export class App implements OnInit {
   readonly sidenavMode = computed(() => this.isMobile() ? 'over' : 'side');
   readonly sidenavOpened = computed(() => !this.isMobile());
 
+  stores = signal<IStore[]>([]);
+
   readonly user = this.authStore.user;
   readonly isAuthenticated = this.authStore.isAuthenticated;
   readonly isAdmin = this.authStore.isAdmin;
@@ -78,11 +83,7 @@ export class App implements OnInit {
       { path: '/', label: 'Dashboard', icon: 'dashboard', exact: true },
       { path: '/wines', label: 'All Wine', icon: 'wine_bar', exact: false },
       { path: '/varietals', label: 'All Varietals', icon: 'diversity_2', exact: false },
-      { path: '/store/5', label: 'Storage', icon: 'warehouse', exact: false },
     ];
-    if (this.isAdmin()) {
-      items.push({ path: '/users', label: 'Users', icon: 'people', exact: false });
-    }
     return items;
   });
 
@@ -91,6 +92,8 @@ export class App implements OnInit {
     if (this.authStore.token()) {
       this.authService.getUserInfo().subscribe();
     }
+
+    this.storageLocationService.getAll().subscribe(s => this.stores.set(s));
 
     // Toggle shell visibility based on route
     this.router.events.pipe(
