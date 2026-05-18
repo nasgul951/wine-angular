@@ -13,6 +13,15 @@ import { AuthService } from './core/auth/auth.service';
 import { StorageLocationService } from './core/services/storage-location.service';
 import { IStore } from './core/models/wine.model';
 
+interface NavItem {
+  path?: string;
+  label: string;
+  icon: string;
+  exact?: boolean;
+  color?: string;
+  children?: NavItem[];
+}
+
 @Component({
   selector: 'app-root',
   imports: [
@@ -71,19 +80,38 @@ export class App implements OnInit {
   readonly sidenavMode = computed(() => this.isMobile() ? 'over' : 'side');
   readonly sidenavOpened = computed(() => !this.isMobile());
 
-  stores = signal<IStore[]>([]);
+  private readonly stores = signal<IStore[]>([]);
+  readonly expandedSections = signal<Record<string, boolean>>({});
 
   readonly user = this.authStore.user;
   readonly isAuthenticated = this.authStore.isAuthenticated;
   readonly isAdmin = this.authStore.isAdmin;
   readonly showShell = signal(false);
 
-  readonly navItems = computed(() => {
-    const items = [
+  readonly navItems = computed<NavItem[]>(() => {
+    const items: NavItem[] = [
       { path: '/', label: 'Dashboard', icon: 'dashboard', exact: true },
       { path: '/wines', label: 'All Wine', icon: 'wine_bar', exact: false },
       { path: '/varietals', label: 'All Varietals', icon: 'diversity_2', exact: false },
     ];
+
+    if (this.stores().length > 0) {
+      items.push({
+        label: 'Storage',
+        icon: 'warehouse',
+        children: this.stores().map(s => ({
+          path: `/store/${s.id}`,
+          label: s.name,
+          icon: 'shelves',
+          color: s.color,
+        })),
+      });
+    }
+
+    if (this.isAdmin()) {
+      items.push({ path: '/users', label: 'Users', icon: 'people', exact: false });
+    }
+
     return items;
   });
 
@@ -105,6 +133,10 @@ export class App implements OnInit {
 
     // Set initial shell state
     this.showShell.set(!this.router.url.startsWith('/login'));
+  }
+
+  toggleSection(label: string): void {
+    this.expandedSections.update(s => ({ ...s, [label]: !(s[label] ?? true) }));
   }
 
   closeSidenavIfMobile(): void {
