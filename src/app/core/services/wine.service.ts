@@ -7,6 +7,7 @@ import {
   Wine, Bottle, NewWineRequest, PatchWineRequest,
   NewBottleRequest, PatchBottleRequest,
   GetWinesOptions, IStoreLocation, IStoreBottle,
+  IWineSummary,
 } from '../models/wine.model';
 
 @Injectable({ providedIn: 'root' })
@@ -81,11 +82,16 @@ export class WineService {
     return this.http.patch<Bottle>(`${this.baseUrl}/bottles/${bottleId}`, req);
   }
 
+  // deprecated - use getInventory in StorageLocationService instead
   getStoreInventory(storeId: number): Observable<IStoreLocation[]> {
     return this.http.get<IStoreLocation[]>(`${this.baseUrl}/store/${storeId}`);
   }
 
   getBottlesByBinId(binId: number): Observable<IStoreBottle[]> {
     return this.http.get<IStoreBottle[]>(`${this.baseUrl}/store/bin/${binId}`);
+  }
+
+  getSummary(): Observable<IWineSummary> {
+    return this.http.get<IWineSummary>(`${this.baseUrl}/summary`);
   }
 }

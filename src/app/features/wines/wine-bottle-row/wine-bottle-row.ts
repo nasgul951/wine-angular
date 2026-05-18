@@ -1,4 +1,4 @@
-import { Component, inject, input, output, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, input, output, signal, computed, OnInit, AfterViewInit, ElementRef, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -22,7 +22,7 @@ import { StorageLocationPickerComponent } from '../../../shared/components/stora
 
       <mat-form-field>
         <mat-label>Row</mat-label>
-        <input matInput type="number" [(ngModel)]="binY" (ngModelChange)="markDirty()" />
+        <input matInput type="number" [(ngModel)]="binY" (ngModelChange)="markDirty()" #rowInput />
       </mat-form-field>
 
       <mat-form-field>
@@ -50,9 +50,10 @@ import { StorageLocationPickerComponent } from '../../../shared/components/stora
     </div>
   `,
 })
-export class WineBottleRowComponent implements OnInit {
+export class WineBottleRowComponent implements OnInit, AfterViewInit {
   private readonly wineService = inject(WineService);
   private readonly wineListState = inject(WineListStateService);
+  private readonly rowInput = viewChild<ElementRef<HTMLInputElement>>('rowInput');
 
   bottle = input<Bottle | undefined>();
   isNew = input(false);
@@ -71,6 +72,12 @@ export class WineBottleRowComponent implements OnInit {
   dirty = signal(false);
 
   private initialState = '';
+
+  ngAfterViewInit(): void {
+    if (this.isNew()) {
+      this.rowInput()?.nativeElement.focus();
+    }
+  }
 
   ngOnInit(): void {
     const b = this.bottle();

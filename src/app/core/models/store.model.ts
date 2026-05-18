@@ -21,3 +21,23 @@ export class WineStore {
     };
   }
 }
+
+export interface IStoreCell {
+  id: number;
+  binX: number;
+  binY: number;
+  count: number;
+}
+
+export interface IStoreInventory {
+  id: number;
+  name: string;
+  abbreviation: string;
+  color: string;
+  rows: number;
+  columns: number;
+  hasTopBin: boolean;
+  hasBottomBin: boolean;
+  totalBottles: number;
+  cells: IStoreCell[];
+}

@@ -61,6 +61,7 @@ export interface GetWinesOptions {
   filter?: WineFilter;
 }
 
+// deprecated - use IStoreInventory instead
 export interface IStoreLocation {
   id: number;
   binX: number;
@@ -90,4 +91,20 @@ export interface IStoreBottle {
   binY: number;
   depth: number;
   createdDate: Date;
+}
+
+export interface IConsumedWine {
+  varietal: string;
+  vineyard: string;
+  label: string;
+  vintage: number;
+  consumedDate: Date;
+}
+
+export interface IWineSummary {
+  totalBottles: number;
+  uniqueWines: number;
+  uniqueVarietals: number;
+  uniqueVineyards: number;
+  lastConsumed: IConsumedWine | null;  
 }
