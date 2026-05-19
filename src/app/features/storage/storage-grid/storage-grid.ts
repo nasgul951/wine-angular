@@ -1,4 +1,5 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -76,14 +77,18 @@ export class StorageGridComponent implements OnInit {
   inventory = signal<IStoreInventory | null>(null);
   selectedBin = signal<number | null>(null);
 
+  private readonly destroyRef = inject(DestroyRef);
   private storeId = 5;
   private wineStore!: WineStore;
   private refreshKey = 0;
 
   ngOnInit(): void {
-    this.storeId = Number(this.route.snapshot.paramMap.get('id')) || 5;
-    this.wineStore = new WineStore(this.storeId);
-    this.fetchInventory();
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+      this.storeId = Number(params.get('id')) || 5;
+      this.wineStore = new WineStore(this.storeId);
+      this.inventory.set(null);
+      this.fetchInventory();
+    });
   }
 
   onBottleDeleted(): void {
