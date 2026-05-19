@@ -1,7 +1,11 @@
 @if (showShell()) {
   <mat-sidenav-container class="h-full">
-    <mat-sidenav #sidenav [mode]="sidenavMode()" [opened]="sidenavOpened()" class="w-60">
-      <mat-toolbar color="primary" class="!text-lg !font-semibold">Wine Cellar</mat-toolbar>
+    <mat-sidenav #sidenav [mode]="sidenavMode()" [opened]="sidenavOpened()" class="w-60 rounded-none!"
+               style="background-color: var(--mat-sys-surface-container)">
+      <mat-toolbar class="text-lg! font-semibold!"
+                   style="background-color: var(--mat-sys-primary); color: var(--mat-sys-on-primary)">
+        Wine Cellar
+      </mat-toolbar>
       <mat-nav-list>
         @for (item of navItems(); track item.label) {
           @if (item.children) {
@@ -46,15 +50,15 @@
     </mat-sidenav>
 
     <mat-sidenav-content>
-      <mat-toolbar>
-        <button mat-icon-button (click)="sidenav.toggle()">
+      <mat-toolbar style="background-color: var(--mat-sys-primary); color: var(--mat-sys-on-primary)">
+        <button mat-icon-button (click)="sidenav.toggle()" style="color: inherit">
           <mat-icon>menu</mat-icon>
         </button>
         <span class="flex-1"></span>
         @if (user(); as u) {
           <span class="text-sm mr-4">{{ u.userName }}</span>
         }
-        <button mat-icon-button (click)="logout()" matTooltip="Logout">
+        <button mat-icon-button (click)="logout()" matTooltip="Logout" style="color: inherit">
           <mat-icon>logout</mat-icon>
         </button>
       </mat-toolbar>
